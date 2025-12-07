@@ -1,6 +1,7 @@
-# Smart-Irrigation-and-Water-Quality-Monitoring-System_PL-SQL-Capstone-Project
+# Smart Irrigation and Water Quality Monitoring System_PL-SQL Final Project
 
 Student: BOUCKAMBA M. Hamir-Aime
+
 Student ID: 27242
 
 Course: PL/SQL (INSY 8311)
