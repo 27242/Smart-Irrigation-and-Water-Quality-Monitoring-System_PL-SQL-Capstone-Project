@@ -1,0 +1,222 @@
+# ER Diagram Explanation - Smart Irrigation System
+
+## Diagram Overview
+This Entity-Relationship (ER) diagram represents the logical database design for the **Smart Irrigation and Water Quality Monitoring System**. The design follows **Third Normal Form (3NF)** to eliminate data redundancy and ensure data integrity.
+
+---
+
+## Entities Description
+
+### 1. CROP_TYPES (Master Reference Table)
+**Purpose:** Stores master data about different crop/plant types with their ideal growing conditions.
+- **Primary Key:** `crop_type_id`
+- **Attributes:** Crop name, ideal moisture range (min/max), ideal pH range (min/max), water requirements
+- **Special Feature:** Implements **Type 2 Slowly Changing Dimension (SCD)** with `valid_from`, `valid_to`, `is_current` columns to track historical changes
+
+### 2. GARDEN_ZONES (Core Entity)
+**Purpose:** Represents physical planting areas in the garden/farm.
+- **Primary Key:** `zone_id`
+- **Attributes:** Zone name, area, soil type, creation date, status
+- **Foreign Key:** `crop_type_id` references CROP_TYPES
+- **Business Rule:** Each zone can grow only one crop type at a time
+
+### 3. USERS (Actor Entity)
+**Purpose:** Manages system users with different access levels.
+- **Primary Key:** `user_id`
+- **Attributes:** Username, full name, role, email, registration date
+- **Role Types:** ADMIN (full access), FARMER (execute tasks), VIEWER (read-only)
+
+### 4. SENSOR_READINGS (Fact Table)
+**Purpose:** Stores time-series data collected from IoT sensors.
+- **Primary Key:** `reading_id`
+- **Attributes:** Timestamp, moisture level, pH level, temperature, sensor status
+- **Foreign Key:** `zone_id` references GARDEN_ZONES
+- **Volume:** High-frequency data (hourly readings expected)
+
+### 5. ALERTS (Event Entity)
+**Purpose:** Tracks system-generated notifications for critical conditions.
+- **Primary Key:** `alert_id`
+- **Attributes:** Alert type, message, priority, status, resolution details
+- **Foreign Keys:** 
+  - `zone_id` references GARDEN_ZONES
+  - `resolved_by` references USERS (optional)
+
+### 6. WATERING_TASKS (Transaction Entity)
+**Purpose:** Manages scheduled irrigation activities.
+- **Primary Key:** `task_id`
+- **Attributes:** Scheduled date, recommended/actual water amounts, status, completion details
+- **Foreign Keys:**
+  - `zone_id` references GARDEN_ZONES
+  - `completed_by` references USERS (optional)
+
+### 7. AUDIT_LOG (Audit Entity)
+**Purpose:** Tracks all system changes for compliance and debugging.
+- **Primary Key:** `audit_id`
+- **Attributes:** Table/column changed, old/new values, change type, who changed it, when
+- **Business Rule:** Automatic logging via database triggers
+
+---
+
+## Relationships & Cardinalities
+
+### 1. CROP_TYPES → GARDEN_ZONES
+- **Relationship:** "is planted in"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One crop type can be planted in multiple garden zones
+- **Business Rule:** A zone can have only one current crop type
+
+### 2. GARDEN_ZONES → SENSOR_READINGS
+- **Relationship:** "generates readings for"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One garden zone generates multiple sensor readings over time
+- **Volume:** Potentially thousands of readings per zone
+
+### 3. GARDEN_ZONES → ALERTS
+- **Relationship:** "triggers alerts for"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One garden zone can trigger multiple alerts
+- **Optionality:** A zone may have zero alerts if conditions are normal
+
+### 4. GARDEN_ZONES → WATERING_TASKS
+- **Relationship:** "requires watering tasks for"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One garden zone requires multiple watering tasks over time
+- **Frequency:** Typically daily or as-needed tasks
+
+### 5. USERS → ALERTS
+- **Relationship:** "resolves"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One user can resolve multiple alerts
+- **Optionality:** Alerts may be unresolved (NULL foreign key)
+
+### 6. USERS → WATERING_TASKS
+- **Relationship:** "completes"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One user can complete multiple watering tasks
+- **Optionality:** Tasks may be unassigned or pending
+
+### 7. USERS → AUDIT_LOG
+- **Relationship:** "makes changes recorded in"
+- **Cardinality:** **1:M** (One-to-Many)
+- **Description:** One user's actions generate multiple audit records
+- **Note:** `changed_by` can also store 'SYSTEM' for automated changes
+
+---
+
+## Normalization Justification
+
+### First Normal Form (1NF)
+- ✅ All tables have atomic columns (no repeating groups)
+- ✅ Each column contains single values only
+- ✅ Primary keys uniquely identify each row
+- **Example:** SENSOR_READINGS has separate columns for moisture, pH, temperature
+
+### Second Normal Form (2NF)
+- ✅ All non-key attributes fully dependent on entire primary key
+- ✅ Created separate CROP_TYPES table to eliminate partial dependencies
+- ✅ No attributes depend on only part of a composite key
+- **Example:** Crop information moved from GARDEN_ZONES to CROP_TYPES
+
+### Third Normal Form (3NF)
+- ✅ Eliminated transitive dependencies
+- ✅ Each non-key attribute depends only on the primary key
+- ✅ Separated user information into USERS table
+- **Example:** User details don't repeat in ALERTS or WATERING_TASKS
+
+---
+
+## BI & Analytics Considerations
+
+### Fact vs. Dimension Tables
+| **Table Type** | **Tables** | **Purpose** |
+|----------------|------------|-------------|
+| **Fact Tables** | SENSOR_READINGS, WATERING_TASKS, ALERTS | Contain measurable metrics and events |
+| **Dimension Tables** | GARDEN_ZONES, CROP_TYPES, USERS | Provide context for facts (who, what, where) |
+| **Time Dimension** | (Derived from timestamps) | Temporal analysis |
+
+### Slowly Changing Dimensions (SCD) Strategy
+- **CROP_TYPES:** Type 2 SCD (track full history with versioning)
+- **USERS:** Type 1 SCD (overwrite changes, keep current only)
+- **GARDEN_ZONES:** Type 2 for crop changes, Type 1 for other attributes
+
+### Aggregation Levels
+1. **Raw Level:** Individual sensor readings (hourly)
+2. **Daily Level:** Averages, totals, min/max values
+3. **Weekly/Monthly:** Trend analysis, performance metrics
+4. **Seasonal:** Crop cycle analysis, resource planning
+
+### Audit Trail Design
+- **Comprehensive Tracking:** All DML operations on critical tables
+- **Compliance Ready:** Meets data governance requirements
+- **Debugging Support:** Historical change tracking
+- **Performance:** Indexed for efficient querying
+
+---
+
+## Data Integrity Constraints
+
+### Primary Constraints
+- All tables have single-column primary keys
+- Sequential numbering via sequences
+- NOT NULL constraints on mandatory fields
+
+### Foreign Key Constraints
+- Cascade relationships maintain referential integrity
+- Optional foreign keys where appropriate (e.g., unresolved alerts)
+- Indexed foreign keys for join performance
+
+### Check Constraints
+- Domain validation (moisture 0-100%, pH 0-14)
+- Status field valid values enumerated
+- Business rules enforced at database level
+
+### Unique Constraints
+- Usernames and crop names must be unique
+- Prevents duplicate master data entries
+
+---
+
+## Scalability & Performance Features
+
+### Indexing Strategy
+- Foreign keys indexed for join performance
+- Composite indexes on frequently queried columns
+- Time-based indexes for time-series data
+
+### Volume Considerations
+- **Sensor Readings:** High volume, time-partitioning recommended
+- **Alerts/Tasks:** Medium volume, status-based indexing
+- **Master Data:** Low volume, full caching possible
+
+### Partitioning Strategy (Future)
+- SENSOR_READINGS: Range partitioning by month
+- AUDIT_LOG: Range partitioning by week
+- Improves query performance and maintenance
+
+---
+
+## Assumptions & Limitations
+
+### Current Scope
+1. Simulated sensor data (not real IoT integration)
+2. Single database instance (not distributed)
+3. Manual task execution confirmation
+4. Basic alerting (no SMS/email integration yet)
+
+### Future Expansion Points
+1. Real IoT sensor integration
+2. Mobile application interface
+3. Weather API integration
+4. Machine learning predictions
+5. Multi-tenant architecture
+
+### Data Volume Estimates
+- Initial: 10-50 garden zones
+- Sensor Data: ~24 readings/zone/day = 240-1,200 rows/day
+- Alerts: 5-20 alerts/day (depending on conditions)
+- Tasks: 10-50 tasks/day
+- Audit: 100-500 records/day
+
+---
+
+## Relationship Visualization (Text Representation)
