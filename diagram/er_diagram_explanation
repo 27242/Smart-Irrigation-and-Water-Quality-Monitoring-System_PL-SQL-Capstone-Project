@@ -1,0 +1,38 @@
+
+### **Tables (7 Total)**
+| Table | Description | Key Features |
+|-------|-------------|--------------|
+| **CROP_TYPES** | Crop master data | Type 2 SCD, ideal parameters |
+| **GARDEN_ZONES** | Planting areas | Zone-specific settings |
+| **SENSOR_READINGS** | Time-series data | Hourly measurements |
+| **ALERTS** | System notifications | Priority-based, trackable |
+| **WATERING_TASKS** | Irrigation schedule | Automated generation |
+| **USERS** | System users | Role-based access |
+| **AUDIT_LOG** | Change tracking | Full audit trail |
+
+---
+
+## 🔧 **PL/SQL Components**
+
+### **Core Functions**
+1. **`fn_AnalyzeZoneHealth(zon)`** - Returns water quality status
+2. **`fn_CalculateWaterNeed(zon)`** - Computes irrigation requirements
+3. **`fn_CheckSensorHealth(zon)`** - Validates sensor data quality
+
+### **Stored Procedures**
+1. **`usp_GenerateWateringSchedule`** - Daily task generation
+2. **`usp_ProcessSensorReadings`** - Bulk data processing
+3. **`usp_ResolveAlert`** - Alert management workflow
+
+### **Triggers**
+1. **`trg_CriticalAlert`** - Automatic alert on threshold breach
+2. **`trg_AuditChanges`** - Track all DML operations
+3. **`trg_ValidateSensorData`** - Data quality assurance
+
+### **Packages**
+1. **`IRRIGATION_PKG`** - Main business logic package
+2. **`REPORTING_PKG`** - Analytics and reporting functions
+
+---
+
+## 📁 **Project Structure**
