@@ -1,0 +1,37 @@
+# Phase 4
+## Smart Irrigation Monitoring System
+
+### 1. Database Information
+- **Database Name**: tue_27242_aime_irrigationMS_db
+- **Oracle Version**: 21c
+- **Platform**: Windows
+- **Path**: C:\oracle21c\oradata\ORCL\tue_27242_aime_irrigationMS_db\
+
+### 2. User Accounts
+| Username | Password | Role | Purpose |
+|----------|----------|------|---------|
+| irrigation_admin | aime | Admin | PDB administration |
+| irrigation_app | aime2024 | Application | Main application user |
+| irrigation_ro | readonly2024 | Read-Only | Reporting and analytics |
+
+### 3. Tablespaces
+1. **IRRIGATION_DATA** (200MB, autoextend to 2GB)
+   - Location: C:\oracle21c\oradata\ORCL\tue_27242_aime_irrigationMS_db\irrigation_data01.dbf
+   - Purpose: All application tables and indexes
+
+2. **IRRIGATION_TEMP** (100MB, autoextend to 500MB)
+   - Location: C:\oracle21c\oradata\ORCL\tue_27242_aime_irrigationMS_db\irrigation_temp01.dbf
+   - Purpose: Temporary operations and sorting
+
+### 4. Configuration Summary
+- Archive Logging: Enabled
+- SGA_TARGET: 500MB
+- PGA_AGGREGATE_TARGET: 200MB
+- Autoextend: Enabled for all datafiles
+
+### 5. Steps Executed
+1. Created PDB with admin user
+2. Created dedicated tablespaces
+3. Created application users with proper privileges
+4. Configured basic memory parameters
+5. Enabled archive logging for recovery
